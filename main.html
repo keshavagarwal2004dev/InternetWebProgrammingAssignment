@@ -1,1 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeTracker Pro - Student Progress Monitor</title>
+    <style>
+      :root {
+        --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --text-color: #333;
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --nav-bg: rgba(255, 255, 255, 0.95);
+        --stat-card-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --progress-ring-bg: #e6e6e6;
+        --progress-text-color: #667eea;
+        --form-label-color: #555;
+        --form-border: #e0e0e0;
+        --btn-bg: linear-gradient(45deg, #667eea, #764ba2);
+        --btn-color: white;
+        --skill-badge-bg: linear-gradient(45deg, #667eea, #764ba2);
+        --assessment-score-color: #667eea;
+        --student-avatar-bg: linear-gradient(45deg, #667eea, #764ba2);
+        --challenge-item-bg: rgba(102, 126, 234, 0.05);
+        --challenge-item-hover-bg: rgba(102, 126, 234, 0.15);
+        --student-item-hover-bg: rgba(102, 126, 234, 0.1);
+        --notification-bg-success: #4caf50;
+        --notification-bg-error: #f44336;
+        --notification-bg-info: #2196f3;
+      }
 
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        color: var(--text-color);
+        transition: background 0.3s, color 0.3s;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      /* Navigation */
+      .nav {
+        background: var(--nav-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 15px 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .nav-brand {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 15px;
+      }
+
+      .nav-menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .nav-item {
+        padding: 10px 20px;
+        background: var(--btn-bg);
+        color: var(--btn-color);
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      /* Dark/Light Mode Toggle Button */
+      .mode-toggle {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 20px;
+        transition: background 0.2s, color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mode-toggle:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+      }
+
+      /* Page Content */
+      .page {
+        display: none;
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Cards */
+      .card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, background 0.3s, color 0.3s;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      .card-header {
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+      }
+
+      .card-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      /* Circular Progress Rings */
+      .progress-ring {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 20px auto;
+      }
+
+      .progress-ring svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+      }
+
+      .progress-ring-bg {
+        fill: none;
+        stroke: var(--progress-ring-bg);
+        stroke-width: 8;
+      }
+
+      .progress-ring-fill {
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dasharray 1s ease;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--progress-text-color);
+      }
+
+      /* Grid Layouts */
+      .grid {
+        display: grid;
+        gap: 25px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+
+      /* Stats Cards */
+      .stat-card {
+        background: var(--stat-card-bg);
+        color: white;
+        text-align: center;
+        border-radius: 15px;
+        padding: 25px;
+        transition: transform 0.3s ease, background 0.3s, color 0.3s;
+      }
+
+      .stat-card:hover {
+        transform: scale(1.05);
+      }
+
+      .stat-number {
+        font-size: 48px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+
+      /* Challenge Items */
+      .challenge-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 15px;
+        background: var(--challenge-item-bg);
+        border-radius: 0 10px 10px 0;
+        transition: background 0.3s;
+      }
+
+      .challenge-status {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 15px;
+      }
+
+      .status-completed {
+        background: #4caf50;
+      }
+      .status-in-progress {
+        background: #ff9800;
+      }
+      .status-pending {
+        background: #757575;
+      }
+
+      /* Student List */
+      .student-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        transition: background 0.3s;
+      }
+
+      .student-info {
+        display: flex;
+        align-items: center;
+      }
+
+      .student-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--student-avatar-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 15px;
+      }
+
+      /* Performance Chart */
+      .chart-container {
+        height: 300px;
+        position: relative;
+        margin: 20px 0;
+      }
+
+      .chart-bar {
+        position: absolute;
+        bottom: 0;
+        background: linear-gradient(180deg, #667eea, #764ba2);
+        border-radius: 5px 5px 0 0;
+        transition: height 1s ease;
+        min-height: 20px;
+      }
+
+      /* Forms */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--form-label-color);
+      }
+
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid var(--form-border);
+        border-radius: 10px;
+        font-size: 16px;
+        transition: border-color 0.3s ease, background 0.3s, color 0.3s;
+      }
+
+      .form-input:focus,
+      .form-select:focus,
+      .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        background: var(--btn-bg);
+        color: var(--btn-color);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .nav-menu {
+          flex-direction: column;
+        }
+
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-number {
+          font-size: 36px;
+        }
+
+        .progress-ring {
+          width: 100px;
+          height: 100px;
+        }
+      }
+
+      /* Skill badges */
+      .skill-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        background: var(--skill-badge-bg);
+        color: white;
+        border-radius: 15px;
+        font-size: 12px;
+        margin: 2px;
+      }
+
+      /* Assessment Results */
+      .assessment-result {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .assessment-score {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--assessment-score-color);
+      }
+
+      /* Dark mode styles */
+      body.dark-mode {
+        --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        --text-color: #ecf0f1;
+        --card-bg: rgba(52, 73, 94, 0.95);
+        --nav-bg: rgba(52, 73, 94, 0.95);
+        --stat-card-bg: linear-gradient(135deg, #232b3e 0%, #3a3f5a 100%);
+        --progress-ring-bg: #3a3f5a;
+        --progress-text-color: #a3bffa;
+        --form-label-color: #bfc9d1;
+        --form-border: #3a3f5a;
+        --btn-bg: linear-gradient(45deg, #232b3e, #3a3f5a);
+        --btn-color: #ecf0f1;
+        --skill-badge-bg: linear-gradient(45deg, #232b3e, #3a3f5a);
+        --assessment-score-color: #a3bffa;
+        --student-avatar-bg: linear-gradient(45deg, #232b3e, #3a3f5a);
+        --challenge-item-bg: rgba(52, 73, 94, 0.2);
+        --challenge-item-hover-bg: rgba(52, 73, 94, 0.3);
+        --student-item-hover-bg: rgba(52, 73, 94, 0.2);
+        --notification-bg-success: #388e3c;
+        --notification-bg-error: #c62828;
+        --notification-bg-info: #1976d2;
+      }
+
+      body.dark-mode .card-title,
+      body.dark-mode .card-header {
+        color: #a3bffa;
+        border-bottom: 2px solid #3a3f5a;
+      }
+
+      body.dark-mode .stat-card {
+        color: #ecf0f1;
+      }
+
+      body.dark-mode .progress-text {
+        color: #a3bffa;
+      }
+
+      body.dark-mode .form-label {
+        color: #bfc9d1;
+      }
+
+      body.dark-mode .assessment-score {
+        color: #a3bffa;
+      }
+
+      /* Notification animations */
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Additional hover effects */
+      .student-item:hover {
+        background: var(--student-item-hover-bg);
+        transform: translateX(5px);
+        transition: all 0.3s ease;
+      }
+
+      .challenge-item:hover {
+        background: var(--challenge-item-hover-bg);
+        transform: translateX(5px);
+        transition: all 0.3s ease;
+      }
+
+      /* Loading animations */
+      .loading {
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* Responsive improvements */
+      @media (max-width: 480px) {
+        .container {
+          padding: 10px;
+        }
+
+        .nav {
+          padding: 10px 15px;
+        }
+
+        .card {
+          padding: 15px;
+        }
+
+        .stat-number {
+          font-size: 28px;
+        }
+
+        .progress-ring {
+          width: 80px;
+          height: 80px;
+        }
+
+        .progress-text {
+          font-size: 16px;
+        }
+      }
+
+      /* Print styles */
+      @media print {
+        .nav,
+        .btn {
+          display: none;
+        }
+
+        .page {
+          display: block !important;
+        }
+
+        .card {
+          break-inside: avoid;
+          box-shadow: none;
+          border: 1px solid #ddd;
+        }
+      }
+
+      /* Accessibility improvements */
+      .nav-item:focus,
+      .btn:focus,
+      .form-input:focus,
+      .form-select:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+      }
+
+      /* High contrast mode */
+      @media (prefers-contrast: high) {
+        .card {
+          border: 2px solid #000;
+        }
+
+        .btn {
+          border: 2px solid #000;
+        }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Navigation -->
+      <nav class="nav">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <div class="nav-brand">🚀 CodeTracker Pro</div>
+          <button
+            class="mode-toggle"
+            id="modeToggleBtn"
+            aria-label="Toggle dark/light mode"
+            title="Toggle dark/light mode"
+          >
+            <span id="modeIcon" aria-hidden="true">🌙</span>
+            <span id="modeText" style="font-size: 14px">Dark</span>
+          </button>
+        </div>
+        <div class="nav-menu">
+          <button class="nav-item active" onclick="showPage('dashboard')">
+            Dashboard
+          </button>
+          <button class="nav-item" onclick="showPage('progress')">
+            Progress Tracking
+          </button>
+          <button class="nav-item" onclick="showPage('challenges')">
+            Daily Challenges
+          </button>
+          <button class="nav-item" onclick="showPage('students')">
+            Student Management
+          </button>
+          <button class="nav-item" onclick="showPage('performance')">
+            Performance Analytics
+          </button>
+          <button class="nav-item" onclick="showPage('assessment')">
+            Skill Assessment
+          </button>
+          <button class="nav-item" onclick="showPage('settings')">
+            Settings
+          </button>
+        </div>
+      </nav>
+
+      <!-- Page 1: Dashboard -->
+      <div id="dashboard" class="page active">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📊 Dashboard Overview</h2>
+          </div>
+          <div class="grid grid-3">
+            <div class="stat-card">
+              <div class="stat-number">147</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">89%</div>
+              <div class="stat-label">Average Completion</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">42</div>
+              <div class="stat-label">Active Challenges</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Overall Effectiveness</h3>
+            </div>
+            <div class="progress-ring">
+              <svg>
+                <circle
+                  class="progress-ring-bg"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                ></circle>
+                <circle
+                  class="progress-ring-fill"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  stroke="#667eea"
+                  stroke-dasharray="326.73"
+                  stroke-dashoffset="65.35"
+                ></circle>
+              </svg>
+              <div class="progress-text">80%</div>
+            </div>
+            <p style="text-align: center; margin-top: 15px">
+              Student engagement and success rate
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Today's Highlights</h3>
+            </div>
+            <div class="challenge-item">
+              <div class="challenge-status status-completed"></div>
+              <div>
+                <strong>Algorithm Challenge</strong><br />
+                <small>32 students completed</small>
+              </div>
+            </div>
+            <div class="challenge-item">
+              <div class="challenge-status status-in-progress"></div>
+              <div>
+                <strong>Data Structures Quiz</strong><br />
+                <small>18 students in progress</small>
+              </div>
+            </div>
+            <div class="challenge-item">
+              <div class="challenge-status status-pending"></div>
+              <div>
+                <strong>JavaScript Practice</strong><br />
+                <small>Starts in 2 hours</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 2: Progress Tracking -->
+      <div id="progress" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📈 Progress Tracking</h2>
+          </div>
+          <div class="grid grid-3">
+            <div class="card">
+              <h4>Python Skills</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#4CAF50"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="98.02"
+                  ></circle>
+                </svg>
+                <div class="progress-text">70%</div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>JavaScript Skills</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#FF9800"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="130.69"
+                  ></circle>
+                </svg>
+                <div class="progress-text">60%</div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Problem Solving</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#2196F3"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="32.67"
+                  ></circle>
+                </svg>
+                <div class="progress-text">90%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Weekly Progress Chart</h3>
+            <div class="chart-container">
+              <div
+                class="chart-bar"
+                style="
+                  left: 10%;
+                  width: 8%;
+                  height: 60%;
+                  background: linear-gradient(180deg, #4caf50, #66bb6a);
+                "
+              ></div>
+              <div
+                class="chart-bar"
+                style="
+                  left: 25%;
+                  width: 8%;
+                  height: 75%;
+                  background: linear-gradient(180deg, #2196f3, #42a5f5);
+                "
+              ></div>
+              <div
+                class="chart-bar"
+                style="
+                  left: 40%;
+                  width: 8%;
+                  height: 45%;
+                  background: linear-gradient(180deg, #ff9800, #ffa726);
+                "
+              ></div>
+              <div
+                class="chart-bar"
+                style="
+                  left: 55%;
+                  width: 8%;
+                  height: 85%;
+                  background: linear-gradient(180deg, #9c27b0, #ba68c8);
+                "
+              ></div>
+              <div
+                class="chart-bar"
+                style="
+                  left: 70%;
+                  width: 8%;
+                  height: 90%;
+                  background: linear-gradient(180deg, #f44336, #ef5350);
+                "
+              ></div>
+              <div
+                class="chart-bar"
+                style="
+                  left: 85%;
+                  width: 8%;
+                  height: 70%;
+                  background: linear-gradient(180deg, #607d8b, #78909c);
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 3: Daily Challenges -->
+      <div id="challenges" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🎯 Daily Challenges</h2>
+            <button class="btn" onclick="addChallenge()">
+              Add New Challenge
+            </button>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <h4>Today's Challenges</h4>
+              <div class="challenge-item">
+                <div class="challenge-status status-completed"></div>
+                <div>
+                  <strong>Binary Search Implementation</strong><br />
+                  <small>Difficulty: Medium | Time: 45 min</small>
+                </div>
+              </div>
+              <div class="challenge-item">
+                <div class="challenge-status status-in-progress"></div>
+                <div>
+                  <strong>Array Manipulation</strong><br />
+                  <small>Difficulty: Easy | Time: 30 min</small>
+                </div>
+              </div>
+              <div class="challenge-item">
+                <div class="challenge-status status-pending"></div>
+                <div>
+                  <strong>Dynamic Programming</strong><br />
+                  <small>Difficulty: Hard | Time: 60 min</small>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Challenge Statistics</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#667eea"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="81.68"
+                  ></circle>
+                </svg>
+                <div class="progress-text">75%</div>
+              </div>
+              <p style="text-align: center">Completion Rate</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 4: Student Management -->
+      <div id="students" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">👥 Student Management</h2>
+            <button class="btn" onclick="addStudent()">Add Student</button>
+          </div>
+          <div class="student-item">
+            <div class="student-info">
+              <div class="student-avatar">JD</div>
+              <div>
+                <strong>John Doe</strong><br />
+                <small>john.doe@email.com</small>
+              </div>
+            </div>
+            <div>
+              <div class="skill-badge">Python</div>
+              <div class="skill-badge">JavaScript</div>
+              <div class="assessment-score">85%</div>
+            </div>
+          </div>
+          <div class="student-item">
+            <div class="student-info">
+              <div class="student-avatar">JS</div>
+              <div>
+                <strong>Jane Smith</strong><br />
+                <small>jane.smith@email.com</small>
+              </div>
+            </div>
+            <div>
+              <div class="skill-badge">Java</div>
+              <div class="skill-badge">C++</div>
+              <div class="assessment-score">92%</div>
+            </div>
+          </div>
+          <div class="student-item">
+            <div class="student-info">
+              <div class="student-avatar">MJ</div>
+              <div>
+                <strong>Mike Johnson</strong><br />
+                <small>mike.johnson@email.com</small>
+              </div>
+            </div>
+            <div>
+              <div class="skill-badge">Python</div>
+              <div class="skill-badge">React</div>
+              <div class="assessment-score">78%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 5: Performance Analytics -->
+      <div id="performance" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📊 Performance Analytics</h2>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <h4>Class Performance</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#4CAF50"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="49.01"
+                  ></circle>
+                </svg>
+                <div class="progress-text">85%</div>
+              </div>
+              <p style="text-align: center">Average Score</p>
+            </div>
+            <div class="card">
+              <h4>Improvement Rate</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#2196F3"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="114.36"
+                  ></circle>
+                </svg>
+                <div class="progress-text">65%</div>
+              </div>
+              <p style="text-align: center">Month over Month</p>
+            </div>
+          </div>
+          <div class="card">
+            <h4>Top Performers</h4>
+            <div class="assessment-result">
+              <span>Jane Smith</span>
+              <span class="assessment-score">98%</span>
+            </div>
+            <div class="assessment-result">
+              <span>Alex Chen</span>
+              <span class="assessment-score">95%</span>
+            </div>
+            <div class="assessment-result">
+              <span>Sarah Wilson</span>
+              <span class="assessment-score">93%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 6: Skill Assessment -->
+      <div id="assessment" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🎓 Skill Assessment</h2>
+            <button class="btn" onclick="createAssessment()">
+              Create Assessment
+            </button>
+          </div>
+          <div class="grid grid-3">
+            <div class="card">
+              <h4>Programming Fundamentals</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#9C27B0"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="65.35"
+                  ></circle>
+                </svg>
+                <div class="progress-text">80%</div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Algorithm Design</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#FF5722"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="163.37"
+                  ></circle>
+                </svg>
+                <div class="progress-text">50%</div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Code Quality</h4>
+              <div class="progress-ring">
+                <svg>
+                  <circle
+                    class="progress-ring-bg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                  ></circle>
+                  <circle
+                    class="progress-ring-fill"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    stroke="#795548"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="32.67"
+                  ></circle>
+                </svg>
+                <div class="progress-text">90%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>Recent Assessments</h4>
+            <div class="assessment-result">
+              <span>Python Basics Test</span>
+              <span class="assessment-score">87%</span>
+            </div>
+            <div class="assessment-result">
+              <span>Data Structures Quiz</span>
+              <span class="assessment-score">72%</span>
+            </div>
+            <div class="assessment-result">
+              <span>Algorithms Challenge</span>
+              <span class="assessment-score">95%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 7: Settings -->
+      <div id="settings" class="page">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">⚙️ Settings</h2>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h4>Challenge Settings</h4>
+            <div class="form-group">
+              <label class="form-label">Default Challenge Duration</label>
+              <select class="form-select">
+                <option>30 minutes</option>
+                <option>45 minutes</option>
+                <option>60 minutes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Difficulty Progression</label>
+              <select class="form-select">
+                <option>Automatic</option>
+                <option>Manual</option>
+              </select>
+            </div>
+            <button class="btn">Save Challenge Settings</button>
+          </div>
+
+          <div class="card">
+            <h4>Notification Settings</h4>
+            <div class="form-group">
+              <label class="form-label">Email Notifications</label>
+              <select class="form-select">
+                <option>Enabled</option>
+                <option>Disabled</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Progress Reports</label>
+              <select class="form-select">
+                <option>Weekly</option>
+                <option>Monthly</option>
+              </select>
+            </div>
+            <button class="btn">Save Notification Settings</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>System Configuration</h4>
+          <div class="form-group">
+            <label class="form-label">Assessment Threshold</label>
+            <input
+              type="number"
+              class="form-input"
+              value="70"
+              min="0"
+              max="100"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Auto-save Interval (seconds)</label>
+            <input
+              type="number"
+              class="form-input"
+              value="30"
+              min="10"
+              max="300"
+            />
+          </div>
+          <button class="btn">Save System Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Page Navigation
+      function showPage(pageId) {
+        // Hide all pages
+        const pages = document.querySelectorAll(".page");
+        pages.forEach((page) => page.classList.remove("active"));
+
+        // Remove active class from nav items
+        const navItems = document.querySelectorAll(".nav-item");
+        navItems.forEach((item) => item.classList.remove("active"));
+
+        // Show selected page
+        document.getElementById(pageId).classList.add("active");
+
+        // Add active class to clicked nav item
+        event.target.classList.add("active");
+      }
+
+      // Mock Functions for Buttons
+      function addChallenge() {
+        alert("Add Challenge form would open here");
+      }
+
+      function addStudent() {
+        alert("Add Student form would open here");
+      }
+
+      function createAssessment() {
+        alert("Create Assessment wizard would start here");
+      }
+
+      // Animate progress rings on page load
+      window.addEventListener("load", function () {
+        const rings = document.querySelectorAll(".progress-ring-fill");
+        rings.forEach((ring) => {
+          const circumference = 2 * Math.PI * 52;
+          ring.style.strokeDasharray = circumference;
+          ring.style.strokeDashoffset = circumference;
+
+          setTimeout(() => {
+            const offset = ring.getAttribute("stroke-dashoffset");
+            ring.style.strokeDashoffset = offset;
+          }, 500);
+        });
+      });
+
+      // Add some interactivity to charts
+      function updateChart() {
+        const bars = document.querySelectorAll(".chart-bar");
+        bars.forEach((bar, index) => {
+          const randomHeight = Math.random() * 80 + 20;
+          setTimeout(() => {
+            bar.style.height = randomHeight + "%";
+          }, index * 200);
+        });
+      }
+
+      // Auto-update dashboard stats
+      function updateDashboardStats() {
+        const statNumbers = document.querySelectorAll(".stat-number");
+        statNumbers.forEach((stat) => {
+          const currentValue = parseInt(stat.textContent);
+          const change = Math.floor(Math.random() * 10) - 5;
+          const newValue = Math.max(0, currentValue + change);
+
+          if (stat.textContent.includes("%")) {
+            stat.textContent = Math.min(100, newValue) + "%";
+          } else {
+            stat.textContent = newValue;
+          }
+        });
+      }
+
+      // Simulate real-time updates
+      setInterval(updateChart, 10000);
+      setInterval(updateDashboardStats, 15000);
+
+      // Student search functionality
+      function searchStudents() {
+        const searchTerm = document
+          .getElementById("studentSearch")
+          .value.toLowerCase();
+        const students = document.querySelectorAll(".student-item");
+
+        students.forEach((student) => {
+          const name = student
+            .querySelector("strong")
+            .textContent.toLowerCase();
+          const email = student
+            .querySelector("small")
+            .textContent.toLowerCase();
+
+          if (name.includes(searchTerm) || email.includes(searchTerm)) {
+            student.style.display = "flex";
+          } else {
+            student.style.display = "none";
+          }
+        });
+      }
+
+      // Challenge difficulty filter
+      function filterChallenges(difficulty) {
+        const challenges = document.querySelectorAll(".challenge-item");
+        challenges.forEach((challenge) => {
+          const challengeText = challenge.textContent.toLowerCase();
+          if (
+            difficulty === "all" ||
+            challengeText.includes(difficulty.toLowerCase())
+          ) {
+            challenge.style.display = "flex";
+          } else {
+            challenge.style.display = "none";
+          }
+        });
+      }
+
+      // Assessment progress calculation
+      function calculateProgress(completed, total) {
+        return Math.round((completed / total) * 100);
+      }
+
+      // Export data functionality
+      function exportData(type) {
+        const data = {
+          students: 147,
+          challenges: 42,
+          completion: 89,
+        };
+
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(dataBlob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${type}_data_${
+          new Date().toISOString().split("T")[0]
+        }.json`;
+        link.click();
+      }
+
+      // Initialize tooltips and interactive elements
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add hover effects to progress rings
+        const progressRings = document.querySelectorAll(".progress-ring");
+        progressRings.forEach((ring) => {
+          ring.addEventListener("mouseenter", function () {
+            this.style.transform = "scale(1.05)";
+            this.style.transition = "transform 0.3s ease";
+          });
+
+          ring.addEventListener("mouseleave", function () {
+            this.style.transform = "scale(1)";
+          });
+        });
+
+        // Add click animations to cards
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card) => {
+          card.addEventListener("click", function (e) {
+            if (!e.target.classList.contains("btn")) {
+              this.style.transform = "scale(0.98)";
+              setTimeout(() => {
+                this.style.transform = "scale(1)";
+              }, 150);
+            }
+          });
+        });
+      });
+
+      // Form validation
+      function validateForm(formId) {
+        const form = document.getElementById(formId);
+        const inputs = form.querySelectorAll("input, select, textarea");
+        let isValid = true;
+
+        inputs.forEach((input) => {
+          if (input.required && !input.value.trim()) {
+            input.style.borderColor = "#ff4444";
+            isValid = false;
+          } else {
+            input.style.borderColor = "#e0e0e0";
+          }
+        });
+
+        return isValid;
+      }
+
+      // Dark mode toggle
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem(
+          "darkMode",
+          document.body.classList.contains("dark-mode")
+        );
+      }
+
+      // Load dark mode preference
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+      }
+
+      // Performance monitoring
+      function trackPerformance() {
+        const performanceData = {
+          loadTime: performance.now(),
+          memoryUsage: performance.memory
+            ? performance.memory.usedJSHeapSize
+            : "N/A",
+          timestamp: new Date().toISOString(),
+        };
+
+        console.log("Performance metrics:", performanceData);
+      }
+
+      // Call performance tracking
+      window.addEventListener("load", trackPerformance);
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", function (e) {
+        if (e.ctrlKey || e.metaKey) {
+          switch (e.key) {
+            case "1":
+              e.preventDefault();
+              showPage("dashboard");
+              break;
+            case "2":
+              e.preventDefault();
+              showPage("progress");
+              break;
+            case "3":
+              e.preventDefault();
+              showPage("challenges");
+              break;
+            case "4":
+              e.preventDefault();
+              showPage("students");
+              break;
+            case "5":
+              e.preventDefault();
+              showPage("performance");
+              break;
+            case "6":
+              e.preventDefault();
+              showPage("assessment");
+              break;
+            case "7":
+              e.preventDefault();
+              showPage("settings");
+              break;
+          }
+        }
+      });
+
+      // Notification system
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${
+                  type === "success"
+                    ? "#4CAF50"
+                    : type === "error"
+                    ? "#f44336"
+                    : "#2196F3"
+                };
+                color: white;
+                border-radius: 5px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      }
+
+      // Sample notification on page load
+      setTimeout(() => {
+        showNotification("Welcome to CodeTracker Pro! 🚀", "success");
+      }, 1000);
+    </script>
+
+    <style>
+      /* Dark mode styles */
+      .dark-mode {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #ecf0f1;
+      }
+
+      .dark-mode .card {
+        background: rgba(52, 73, 94, 0.95);
+        color: #ecf0f1;
+      }
+
+      .dark-mode .nav {
+        background: rgba(52, 73, 94, 0.95);
+      }
+
+      /* Notification animations */
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Additional hover effects */
+      .student-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+        transition: all 0.3s ease;
+      }
+
+      .challenge-item:hover {
+        background: rgba(102, 126, 234, 0.15);
+        transform: translateX(5px);
+        transition: all 0.3s ease;
+      }
+
+      /* Loading animations */
+      .loading {
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* Responsive improvements */
+      @media (max-width: 480px) {
+        .container {
+          padding: 10px;
+        }
+
+        .nav {
+          padding: 10px 15px;
+        }
+
+        .card {
+          padding: 15px;
+        }
+
+        .stat-number {
+          font-size: 28px;
+        }
+
+        .progress-ring {
+          width: 80px;
+          height: 80px;
+        }
+
+        .progress-text {
+          font-size: 16px;
+        }
+      }
+
+      /* Print styles */
+      @media print {
+        .nav,
+        .btn {
+          display: none;
+        }
+
+        .page {
+          display: block !important;
+        }
+
+        .card {
+          break-inside: avoid;
+          box-shadow: none;
+          border: 1px solid #ddd;
+        }
+      }
+
+      /* Accessibility improvements */
+      .nav-item:focus,
+      .btn:focus,
+      .form-input:focus,
+      .form-select:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+      }
+
+      /* High contrast mode */
+      @media (prefers-contrast: high) {
+        .card {
+          border: 2px solid #000;
+        }
+
+        .btn {
+          border: 2px solid #000;
+        }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </body>
+</html>
